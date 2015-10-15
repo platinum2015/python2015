@@ -80,7 +80,7 @@ a is c #FALSE
 a == c #TRUE
 
 
-#DIVISION  so otherwise 1/2 give 0....
+#DIVISION  so otherwise 1/2 give 0.... MUST DOn the first!!!!
 P_ed = float(edible)/(total_rows)
 
 # S C A L A R ##################################################################
