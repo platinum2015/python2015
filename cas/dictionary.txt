@@ -1,6 +1,0 @@
-key Schluessel Taste 
-slice Scheibe Schnitte Stueck
-value Wert
-object Objekt
-update Aktualisierung
-error Fehler
