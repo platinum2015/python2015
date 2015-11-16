@@ -1,87 +1,40 @@
 # -*- coding: utf-8 -*-
 """
-spec:
-    Write a Python script that predicts from the data in the 
-    training set titan-ic3_train.csv for any individual 
-    if he or she has survived or not 
-
-    Examples for ideas to explore are:
-        * Things you want to engross (e.g., functions, loops, certain data structures)
-        * Things you to newly explore (e.g., list comprehension, lambda expressions)
-        * Use different libraries (e.g., Pandas)
-
-
-test_set:
-    titanic3_test.csv
-
-output:
-    CSV file separated by a semicolon (not surrounded by whitespaces!)
-        header row “key;value”        
-        id,predicted value (0 or 1)
-        
-            Example:
-                key;value 
-                100001;0 
-                100002;1 
-                100003;0
-
-    Name :<nickname><_nn>
-          platinum_01
-
-    submit adress:
-        http://srv-lab-t-864/submission/Titanic/
-        
-    leaderboard:
-        http://srv-lab-t-864/leaderboard/Titanic/
-        
-links:
---> SOL     https://www.kaggle.com/c/titanic-gettingStarted/details/getting-started-with-python
-    https://www.kaggle.com/c/titanic-gettingStarted/details/getting-started-with-python-ii
-    https://www.kaggle.com/c/titanic-gettingStarted/details/getting-started-with-random-forests
-    http://nbviewer.ipython.org/github/agconti/kaggle-titanic/blob/master/Titanic.ipynb
-    http://triangleinequality.wordpress.com/2013/09/05/a-complete-guide-to-getting-0-79903-in-kaggles-titanic-competition-with-python/
-
-learned:
-    [0::,2]
-
+REENGINEERED version
 """
-
 ###############################################################################
 # 4.1 Reading in the training data
 import csv as csv 
 import numpy as np
 import os #platinum
-import time
+from scipy import stats 
+from sklearn.ensemble import RandomForestClassifier
 
-train = 'titanic3_train.csv'
-directory = os.path.dirname(os.path.realpath(__file__))
-filename = os.path.join(directory,train)
+
+def get_data(datafile):
+    directory = os.path.dirname(os.path.realpath(__file__))
+    filename = os.path.join(directory,datafile)
+
+    with open(filename, 'rb') as f:
+        csv_file_object = csv.reader(f, delimiter=';') 
+        header = csv_file_object.next() #next() skips the first line holding the column headers 
+        data = [row for row in csv_file_object]    
+    return np.array(data)   
 
 # Open up the CSV file into a Python object 
-with open(filename, 'rb') as f:
-    csv_file_object = csv.reader(f, delimiter=';') 
-    header = csv_file_object.next() #next() skips the first line holding the column headers 
-    data=[]
-    for row in csv_file_object: #Run through each row in the CSV, add it to the data variable
-        data.append(row) # Then convert from a list to an array # (Be aware that each item is currently a string in this format)
-    data = np.array(data)
-    print data
+data = get_data('titanic3_train.csv')
+for d in  data:
+    if d[14] <> "" and d[2] <> "0":
+        print "%r / %r / %r " % (d[2],d[13],d[14])
 
-print "---- row 1"
-print data[0]
-print "---- row 1:4"
-print data[0:3]
+
+
 ###############################################################################
 #4.2 Play with the training data
-print "---- column"
-print "gender"
-print data[0::,5]
 number_passengers = np.size(data[0::,2].astype(np.float))
 number_survived = np.sum(data[0::,2].astype(np.float))
 proportion_survivors = number_survived / number_passengers
-print "proportion_survivors"
-print proportion_survivors
-
+print "proportion_survivors",proportion_survivors
 
 # This finds where all the elements in the gender column equal “female” 
 women_only_stats = data[0::,5] == "female" 
@@ -121,6 +74,7 @@ with open(filename, 'rb') as f:#platinum
         else: #it is male 
             prediction_file_object.writerow([row[0],'0']) # predict 0 
     prediction_file.close()
+    
 ############################################################################### 
 # 4.4 Submission two (optional)
 #fill up empty fare values with the mean of the corresponding pclass 
@@ -162,28 +116,6 @@ number_of_classes = len(np.unique(data[0::,1]))
 #Initialize the survival table with all zeros 
 survival_table = np.zeros((2, number_of_classes, number_of_price_brackets))
 
-
-#print survival_table
-'''
-[
-	[#female
-         [class 1  
-            0.  #bracket 10
-            0.  #bracket 10-20
-            0.  #bracket 20-30
-            0.  #bracket 30-40
-        ]
-         [ 0.  0.  0.  0.]#bracket (10-20-30-40) class 2
-         [ 0.  0.  0.  0.]#bracket (10-20-30-40) class 3
-  ]
-
- 	[#male
-		[ 0.  0.  0.  0.]#bracket (10-20-30-40) class 1
-         	[ 0.  0.  0.  0.]#bracket (10-20-30-40) class 2
-  	      [ 0.  0.  0.  0.]#bracket (10-20-30-40) class 3
-  ]
-]
-'''
 for i in xrange(number_of_classes): #loop through each class 
     for j in xrange(number_of_price_brackets): #loop through each price bin 
         #Which element is a female, and was ith class, was greater than this bin, 
@@ -216,21 +148,21 @@ for i in xrange(number_of_classes): #loop through each class
             mm = np.mean(m)
         survival_table[ survival_table != survival_table ] = 0. #platinum
         survival_table[0,i,j] = wm
-        survival_table[1,i,j] = mm + 0.2
+        survival_table[1,i,j] = mm
      
         
-print "----survival_table  percentage %"        
+print "----survival_table  percentage %  f/n"        
 print survival_table       
 survival_table[ survival_table < 0.5 ] = 0 
 survival_table[ survival_table >= 0.5 ] = 1        
-print "----survival_table  0 not survive - 1 survive" 
+print "----survival_table  0 not survive - 1 survive f/m" 
 print survival_table       
 
 
 
 #open the test set and a new submission file 
 test = 'titanic3_test.csv'
-prediction = 'platinum_02_genderclassbased_fix_1.csv'
+prediction = 'platinum_02_genderclassbased.csv'
 directory = os.path.dirname(os.path.realpath(__file__))
 filename = os.path.join(directory,test)
 prediction_file =  os.path.join(directory,prediction)
@@ -260,10 +192,22 @@ for row in test_file_object:
             and row[9] < (j+1) * fare_bracket_size:
                 bin_fare = j # If passed these tests then assign index 
                 break 
-        if row[4] == 'female': #If the passenger is female 
-            p.writerow([row[0], "%d" % int(survival_table[0, float(row[1])-1, bin_fare])]) 
-        else: #passenger is male 
-            p.writerow([row[0], "%d" % int(survival_table[1, float(row[1])-1, bin_fare])]) 
+    pred =""    
+    if row[12] <> "":
+        pred = 1
+        # raw_input(row[12])
+    elif row[13] <> "":
+        pred = 0   
+        # raw_input(row[13])        
+    elif row[4] == 'female': #If the passenger is female 
+        print("f",row[12],row[13])        
+        # raw_input("f")         
+        pred=int(survival_table[0, float(row[1])-1, bin_fare]) 
+    else: #passenger is male 
+        pred=int(survival_table[1, float(row[1])-1, bin_fare])        
+        # raw_input("m")
+    p.writerow([row[0], "%d" % pred]) 
+
             # Close out the files. 
 test_file.close() 
 predictions_file.close()        
@@ -275,63 +219,14 @@ predictions_file.close()
 #4.6
 ###############################################################################
 #4.7 Submission three
-import csv as csv 
-import numpy as np 
-from scipy import stats 
-from sklearn.ensemble import RandomForestClassifier
+def generate_array_from(source,cols):
+    rows = len(source[0::, 0])
+    return np.zeros((rows, cols))
 
-
-train = 'titanic3_train.csv'
-directory = os.path.dirname(os.path.realpath(__file__))
-filename = os.path.join(directory,train)
 # Open up the CSV file into a Python object 
-with open(filename, 'rb') as f: # Load the training file 
-    csv_file_object = csv.reader(f, delimiter=';') 
-    csv_file_object.next() # next() skips the first line holding the column headers 
-    orig_train_data = [] 
-    for row in csv_file_object: # Run through each row in the csv, add it to the data variable 
-        orig_train_data.append(row) 
-# Then convert from a list to an array 
-# (Be aware that each item is currently a string in this format) 
-orig_train_data = np.array(orig_train_data)
-#print orig_train_data 
-"""
-# COLUMN CONTENT ORIG.INDEX 
-# id 0 
-# pclass 1 
-# survived 2 
-# name 3
-# surname 4 
-# sex 5 
-# age 6 
-# sibsp 7 
-# parch 8 
-# ticket 9 
-# fare 10 
-# cabin 11 
-# embarked 12 
-# boat 13 
-# body 14 
-# home.dest 15
-
-
-
-# Prepare the data structure used for training 
-#         ORIG.IDX TRAIN.IDX 
-# survived     2     0 
-# pclass       1     1 
-# sibsp        7     2 
-# parch        8     3 
-# sex          5     4 
-# age          6     5 
-# fare         10    6 
-# embarked     12    7
-
-"""
-
-rows = len(orig_train_data[0::, 0]) # Number of rows in the training data 
-cols = 8 # Number of columns in the training data 
-train_data = np.zeros((rows, cols)) # Array to store the data used for training
+orig_train_data  = get_data('titanic3_train.csv')
+# Number of rows in the training data 
+train_data = generate_array_from(orig_train_data,8) 
 
 # SURVIVED: Store data 'survived' in train_data 
 train_data[0::, 0] = orig_train_data[0::, 2].astype(np.float)
@@ -346,6 +241,7 @@ train_data[0::, 3] = orig_train_data[0::, 8].astype(np.float)
 # SEX: Prepare data 'sex' and store it in train_data 
 # First: get the most frequent gender 
 gender_data = orig_train_data[0::, 5] 
+
 num_female = sum(gender_data == 'female') 
 num_male = sum(gender_data == 'male') 
 # Set the most frequent gender (female = 0, male = 1) 
@@ -408,23 +304,11 @@ for i, unique_embarked in embarked_data_unique:
 train_data[0::, 7] = embarked_data[0::].astype(np.float)
 
 # Open up the CSV file into a Python object 
-test = 'titanic3_test.csv'
 directory = os.path.dirname(os.path.realpath(__file__))
 prediction = 'platinum_03_gender.csv'
-filename = os.path.join(directory,test)
 prediction_file =  os.path.join(directory,prediction)
 
-# Open up the CSV file into a Python object 
-with open(filename, 'rb') as f: # Load the test file 
-    csv_file_object = csv.reader(f, delimiter=';') 
-    csv_file_object.next() # next() skips the first line holding the column headers 
-    orig_test_data = [] 
-    for row in csv_file_object: # Run through each row in the csv, add it to the data variable 
-        orig_test_data.append(row) 
-# Then convert from a list to an array 
-# (Be aware that each item is currently a string in this format) 
-orig_test_data = np.array(orig_test_data)
-
+orig_test_data = get_data('titanic3_test.csv')
 
 rows = len(orig_test_data[0::, 0]) # Number of rows in the test data 
 cols = 7 # Number of columns in the test data 
@@ -507,27 +391,26 @@ test_data[0::, 6] = embarked_data[0::].astype(np.float)
 
 test_ids = orig_test_data[0::, 0]
 
+#forest = RandomForestClassifier(n_estimators=100)
+# V1
 forest = RandomForestClassifier(n_estimators=100)
+
 forest = forest.fit(train_data[0::, 1::], train_data[0::, 0])
 #http://scikit-learn.org/dev/modules/generated/sklearn.ensemble.RandomForestClassifier.html
 output = forest.predict(test_data).astype(np.float)
 
 # Write the data into a file 
 directory = os.path.dirname(os.path.realpath(__file__))
-prediction = 'platinum_03__randomforest_bb.csv'
+prediction = 'platinum_rf1_03__randomforest.csv'
 filename =  os.path.join(directory,prediction)
-
-boats = orig_train_data[(data[0::,12] <> "") ] 
-for idx,rw in  enumerate(orig_test_data):
-    print rw[12],"/",rw[13],"--"
-    raw_input(">>>>")
-    if rw[12] <> "":
-        output[idx]=1.0
-    elif rw[13] <> "":
-        output[idx]=0.0
 
 predictions_file = open(filename, 'wb') 
 open_file_object = csv.writer(predictions_file, delimiter=';') 
 open_file_object.writerow(['key', 'value']) 
 open_file_object.writerows(zip(test_ids, output)) 
 predictions_file.close()
+
+
+###############################################################################
+#4.8 Submission FOUR
+
