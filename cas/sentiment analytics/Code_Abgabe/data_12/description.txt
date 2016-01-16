@@ -1,0 +1,38 @@
+
+=== General Description ===
+
+- rawresults.csv lists all single responses from the apis per text entity.
+
+
+=== rawresults.csv headings ===
+
+Corpus	: the internal id of the corpus
+TextID	: the text id used by the corpus (1,2,3,5,15) or document index/sentence index pair for corpus 6 and 7.
+Length	: # of characters in the text
+Words	: # of words in the text
+Expected Sentiment: sentiment annotated in the corpus
+
+AlchemyApi: 	sentiment returned by AlchemyApi
+Lymbix:  	sentiment returned by Lymbix
+MLAnalyzer:  	sentiment returned by MLAnalyzer
+Repustate:  	sentiment returned by Repustate
+Semantria:  	sentiment returned by Semantria
+Sentigem:  	sentiment returned by Sentigem
+Skytle: 	sentiment returned by Skytle
+Textalytics:  	sentiment returned by Textalytics
+Textprocessing: sentiment returned by Textprocessing
+
+
+
+=== Internal Corpus ID ===
+
+The corpus ids in the files are internal ids which refer to the following corpora from our paper:
+
+1: DAI_tweets
+2: JRC_quotations
+4: TAC_rev_sntcs
+5: SEM_headlines
+6: HUL_rev_sntcs
+7: DIL_rev_sntcs
+15: MPQ_news_sntcs
+
