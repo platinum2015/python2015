@@ -11,10 +11,31 @@ import matplotlib.pyplot as plt
 import nltk
 import itertools
 
+def desc_vectorizer(vectorizer):
+    print "type",type(vectorizer)
+    print vectorizer
+    print "feats"
+    #,vectorizer.get_feature_names() BOW
+    #,vectorizer HASHTAG <class 'sklearn.pipeline.FeatureUnion'>
+    try:
+        feats=vectorizer.get_feature_names()
+        for feat in feats :
+            print feat#feat[5:]
+        print vectorizer.get_params()    
+    except:
+        print "NO feats=vectorizer.get_feature_names()"
+    
+    raw_input(">")
 def evaluate(vectorizer,tweetsTrain,tweetsTest,typ):
     #all
     featuresOfTrainData = vectorizer.fit_transform(tweetsTrain['TEXT'].tolist(),"bow")
     labelsOfTrainData = tweetsTrain['SENTIMENT'].tolist()
+    desc_vectorizer(vectorizer)
+    """
+    for x in featuresOfTrainData:
+        print x,type(x)
+        raw_input(">")
+    """        
 
     featuresOfTestData = vectorizer.transform(tweetsTest['TEXT'].tolist())
     labelsOfTestData = tweetsTest['SENTIMENT'].tolist()
@@ -25,7 +46,9 @@ def evaluate(vectorizer,tweetsTrain,tweetsTest,typ):
     print typ+":Final score: " + final_score," CrossValidationScore:",cross_validation
     ret =[final_score,cross_validation] 
     return  ret
+    
 def main():
+   
 
 #  lange finalzeichen punctuation mark capschar/len feat1countpositivewordss
     #FIELDS: ID, SENTIMENT, TEXT
@@ -48,7 +71,7 @@ def main():
         print tweet
         raw_input(">")
     """
-    
+  
     # all combinations 
     stuff = ["bow","hashtag","smile","feat1","feat2","feat3","capslock","Punctuationmark"]
     max_fs = 0
@@ -195,6 +218,7 @@ def createVectorizer(vectorizer_type):
         vectorizerCombined = FeatureUnion([('smile', vectorizerSmileys)])
     elif vectorizer_type == "bow":
         vectorizerBagOfWords = CountVectorizer(binary=True)
+        #print "type",type(vectorizerBagOfWords)#<class 'sklearn.feature_extraction.text.CountVectorizer'>
         vectorizerCombined = FeatureUnion([('bow', vectorizerBagOfWords)])
     elif vectorizer_type == "feat1":
         vectorizer_Feature1 = Pipeline([('len', Feature_1()), ('dict', DictVectorizer())])
@@ -216,14 +240,16 @@ def createVectorizer(vectorizer_type):
         #ngram_range=(2,5) bring to 0.2
         vectorizerHashtag = Pipeline([('len', HashTagCountsFeature()), ('dict', DictVectorizer())])
         vectorizerSmileys = Pipeline([('len', SmileyFeature()), ('dict', DictVectorizer())])
+        
         vectorizer_Feature1 = Pipeline([('len', Feature_1()), ('dict', DictVectorizer())])
         vectorizer_Feature2 = Pipeline([('len', Feature_2()), ('dict', DictVectorizer())])
         vectorizer_Feature3 = Pipeline([('len', Feature_3()), ('dict', DictVectorizer())])
         vectorizer_Capslock = Pipeline([('len', Capslocks()), ('dict', DictVectorizer())])
         vectorizer_Punctuationmark = Pipeline([('len', Punctuationmark()), ('dict', DictVectorizer())])
         vectorizerCombined = FeatureUnion([('bow', vectorizerBagOfWords), ('hashtag', vectorizerHashtag), \
-    ('smile', vectorizerSmileys),("feat1",vectorizer_Feature1),("feat2",vectorizer_Feature2),("feat3",vectorizer_Feature3)\
-    ,("Punctuationmark",vectorizer_Punctuationmark)
+    ('smile', vectorizerSmileys),("feat1",vectorizer_Feature1),("feat2",vectorizer_Feature2)\
+    #,("feat3",vectorizer_Feature3)\
+    ,("Punctuationmark",vectorizer_Punctuationmark)#,("capslock",vectorizer_Capslock)
     ])
     else:
         vectorizerBagOfWords = CountVectorizer(binary=True)
@@ -277,6 +303,10 @@ class HashTagCountsFeature():
         features = []
         for text in texts:
             features.append({'hashtagcount': text.count('#')})
+        """
+        for f in features :
+            print f
+        """        
         return features
 
 
@@ -291,7 +321,9 @@ class SmileyFeature():
         for text in texts:
             #print text
             #raw_input(">")
-            features.append({'haspositivesmiley': text.count(':)')>0, 'hasnegativesmiley': text.count(':(')>0})
+            #features.append({'haspositivesmiley': text.count(':)')>0, 'hasnegativesmiley': text.count(':(')>0})
+            features.append({'haspositivesmiley': text.count(':)'), 'hasnegativesmiley': text.count(':(')})
+
         return features
 
 class Feature_1():
@@ -324,7 +356,12 @@ class Feature_1():
                         s=1
                     pos = wordInfos['POS']
                     if pos == 'verb':
-                        score = score + s
+                        score = score + (s*5)
+                    if pos == 'adj':
+                        score = score + (s*2)
+                    typ=  wordInfos['TYPE']
+                    if typ == 'strongsubj':
+                        score = score + (s*5)
                 else:  
                     if token in ["wtf","heck",":(","#fail"]:
                         score=score -2

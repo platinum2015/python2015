@@ -1,0 +1,9 @@
+{
+    "Points": [
+        100, 
+        90, 
+        85
+    ], 
+    "Name": "McGregor", 
+    "Firstname": "John"
+}
